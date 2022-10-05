@@ -34,10 +34,11 @@ def show_img(img):
 
 def send_notification(msg):
     plt = platform.system()
+    title = "Minimap Watcher"
 
     if plt == 'Linux':
         command = f'''
-        notify-send "Minimap Watcher" "{msg}"
+        notify-send "{title}" "{msg}"
         '''
         os.system(command)
     else:
