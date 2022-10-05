@@ -6,7 +6,6 @@ import time
 import numpy as np
 import cv2
 from mss import mss, screenshot
-import winsound
 
 monitor_width = 1920
 monitor_height = 1080
@@ -33,25 +32,23 @@ def show_img(img):
     cv2.waitKey()
 
 
-def send_notification(title, msg):
+def send_notification(msg):
     plt = platform.system()
-    print(plt)
 
     if plt == 'Linux':
         command = f'''
-        notify-send "{title}" "{msg}"
+        notify-send "Minimap Watcher" "{msg}"
         '''
         os.system(command)
     else:
-
+        print(msg)
 
 
 def main():
     parser = argparse.ArgumentParser(
-        "Watches the pixels in your WoW minimap and alerts you when a yellow dot appears."
-        "Only tested at 1080p in windowed borderless, i.e. no borders like fullscreen, but mouse is free"
+        description="Watches the pixels in your WoW minimap and alerts you when a yellow dot appears.\n"
+        "Only tested at 1080p in windowed borderless, i.e. no borders like fullscreen, but mouse is free."
      )
-    parser.add_argument('alert_sound_path')
     parser.add_argument('--fps', default=20, help="How many times per second to check the map")
     parser.add_argument('--monitor-offset', default=0, help="Monitor 0 is your left most monitor, then 1, then 2, etc")
     parser.add_argument('--alert-sleep', default=5, help="If an alert triggers, take X seconds before triggering again")
@@ -72,10 +69,8 @@ def main():
             found_color, threshold_img = is_color_in_img(original_img, yellow_hue_range["min"], yellow_hue_range["max"])
 
             now = time.time()
-            print("run", found_color, now, last_alert)
             if not found_color and now - last_alert > int(args.alert_sleep):
-                print("match")
-                send_notification("Minimap Tracking", "Found something!")
+                send_notification("Found something in minimap!")
                 last_alert = now
             time.sleep(loop_sleep)
 
