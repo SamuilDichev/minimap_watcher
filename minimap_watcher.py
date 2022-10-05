@@ -52,9 +52,10 @@ def main():
     parser.add_argument('--fps', default=20, help="How many times per second to check the map")
     parser.add_argument('--monitor-offset', default=0, help="Monitor 0 is your left most monitor, then 1, then 2, etc")
     parser.add_argument('--alert-sleep', default=5, help="If an alert triggers, take X seconds before triggering again")
+    parser.add_argument('--debug', action='store_true', help="Shows captured screen area in original and in color threshold modes")
     args = parser.parse_args()
 
-    loop_sleep = 1 / int(args.fps)
+    loop_sleep_seconds = 1 / int(args.fps)
     minimap_box = {
         'top': minimap_top_offset,
         'left': int(args.monitor_offset) * monitor_width + 1760,
@@ -66,13 +67,20 @@ def main():
     with mss() as sct:
         while True:
             original_img = sct.grab(minimap_box)
-            found_color, threshold_img = is_color_in_img(original_img, yellow_hue_range["min"], yellow_hue_range["max"])
+            found_node, threshold_img = is_color_in_img(original_img, yellow_hue_range["min"], yellow_hue_range["max"])
 
-            now = time.time()
-            if not found_color and now - last_alert > int(args.alert_sleep):
+            if found_node and time.time() - last_alert > int(args.alert_sleep):
                 send_notification("Found something in minimap!")
-                last_alert = now
-            time.sleep(loop_sleep)
+                last_alert = time.time()
+
+            if args.debug:
+                cv2.imshow('original_minimap', np.array(original_img))
+                cv2.imshow('threshold_minimap', np.array(threshold_img))
+                if cv2.waitKey(int(loop_sleep_seconds * 1000)) & 0xFF == ord('q'):
+                    cv2.destroyAllWindows()
+                    break
+            else:
+                time.sleep(loop_sleep_seconds)
 
 
 if __name__ == "__main__":
