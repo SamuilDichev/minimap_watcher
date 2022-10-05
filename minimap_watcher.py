@@ -7,24 +7,20 @@ import numpy as np
 import cv2
 from mss import mss, screenshot
 
-monitor_width = 1920
-monitor_height = 1080
-
-minimap_top_offset = 55
-minimap_left_offset = 1760
-minimap_box_side = 109
-
-yellow_hue_range = {
-    "min": np.array([22, 150, 0], np.uint8),
-    "max": np.array([45, 255, 255], np.uint8),
-}
+from constants import (
+    YELLOW_HUE_RANGE,
+    MINIMAP_TOP_OFFSET,
+    MINIMAP_LEFT_OFFSET,
+    MINIMAP_BOX_SIDE,
+    MONITOR_WIDTH,
+)
 
 
 def is_color_in_img(image: screenshot.ScreenShot, color_range_min, color_range_max):
     img_hsv = cv2.cvtColor(np.array(image), cv2.COLOR_BGR2HSV)
     threshold_img = cv2.inRange(img_hsv, color_range_min, color_range_max)
     n_pixels_in_threshold = np.count_nonzero(threshold_img != 0)
-    return n_pixels_in_threshold > 20,  threshold_img
+    return n_pixels_in_threshold > 20, threshold_img
 
 
 def show_img(img):
@@ -58,17 +54,17 @@ def main():
 
     loop_sleep_seconds = 1 / int(args.fps)
     minimap_box = {
-        'top': minimap_top_offset,
-        'left': int(args.monitor_offset) * monitor_width + 1760,
-        'width': minimap_box_side,
-        'height': minimap_box_side,
+        'top': MINIMAP_TOP_OFFSET,
+        'left': int(args.monitor_offset) * MONITOR_WIDTH + MINIMAP_LEFT_OFFSET,
+        'width': MINIMAP_BOX_SIDE,
+        'height': MINIMAP_BOX_SIDE,
     }
 
     last_alert = 0
     with mss() as sct:
         while True:
             original_img = sct.grab(minimap_box)
-            found_node, threshold_img = is_color_in_img(original_img, yellow_hue_range["min"], yellow_hue_range["max"])
+            found_node, threshold_img = is_color_in_img(original_img, YELLOW_HUE_RANGE["min"], YELLOW_HUE_RANGE["max"])
 
             if found_node and time.time() - last_alert > int(args.alert_sleep):
                 send_notification("Found something in minimap!")
